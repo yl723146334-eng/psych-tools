@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猪猪王国日报</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .newspaper {
+            background: #fffef5;
+            max-width: 520px;
+            width: 100%;
+            border: 3px solid #5a3e2b;
+            border-radius: 4px;
+            padding: 0;
+            box-shadow: 4px 4px 0 #5a3e2b;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            border-bottom: 3px double #5a3e2b;
+            padding: 20px 24px 16px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #5a3e2b;
+            letter-spacing: 8px;
+            margin-bottom: 4px;
+        }
+
+        .header .date {
+            font-size: 13px;
+            color: #8a7060;
+        }
+
+        .header .slogan {
+            font-size: 12px;
+            color: #b08968;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .edition {
+            text-align: center;
+            font-size: 11px;
+            color: #b08968;
+            padding: 6px 0;
+            border-bottom: 1px solid #d4c5b0;
+            letter-spacing: 2px;
+        }
+
+        /* Sections */
+        .section {
+            padding: 16px 24px;
+            border-bottom: 1px dashed #d4c5b0;
+        }
+
+        .section:last-child { border-bottom: none; }
+
+        .section-title {
+            font-size: 15px;
+            color: #5a3e2b;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-title .icon { font-size: 18px; }
+
+        /* Headline */
+        .headline {
+            font-size: 20px;
+            font-weight: 800;
+            color: #5a3e2b;
+            line-height: 1.5;
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        .headline-sub {
+            font-size: 14px;
+            color: #8a7060;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        /* Weather */
+        .weather-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .weather-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .weather-item .emoji { font-size: 32px; }
+
+        .weather-item .label {
+            font-size: 12px;
+            color: #8a7060;
+        }
+
+        .weather-item .value {
+            font-size: 14px;
+            color: #5a3e2b;
+            font-weight: 600;
+        }
+
+        /* Tasks */
+        .task-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .task-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fdf6ed;
+            border: 1px solid #e8dcc8;
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+
+        .task-card .who {
+            background: #5a3e2b;
+            color: #fffef5;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .task-card .who.queen { background: #e07b9b; }
+        .task-card .who.general { background: #6b8cce; }
+
+        .task-card .what {
+            font-size: 14px;
+            color: #5a3e2b;
+        }
+
+        /* Sweet words */
+        .sweet-box {
+            background: linear-gradient(135deg, #fff0f3 0%, #fff5e6 100%);
+            border: 1px solid #f0d5c9;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .sweet-box .from {
+            font-size: 12px;
+            color: #b08968;
+            margin-bottom: 6px;
+        }
+
+        .sweet-box .words {
+            font-size: 16px;
+            color: #5a3e2b;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+
+        /* Horoscope */
+        .fortune-row {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .fortune-item {
+            text-align: center;
+        }
+
+        .fortune-item .name {
+            font-size: 13px;
+            color: #8a7060;
+            margin-bottom: 4px;
+        }
+
+        .fortune-item .stars {
+            font-size: 16px;
+            color: #f0a050;
+        }
+
+        .fortune-item .tip {
+            font-size: 12px;
+            color: #5a3e2b;
+            margin-top: 4px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 14px;
+            border-top: 3px double #5a3e2b;
+            font-size: 12px;
+            color: #b08968;
+        }
+
+        /* Refresh button */
+        .refresh-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 24px;
+            background: #5a3e2b;
+            color: #fffef5;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover { transform: scale(1.05); }
+
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .header h1 { font-size: 26px; letter-spacing: 4px; }
+            .section { padding: 14px 16px; }
+            .headline { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="newspaper">
+            <div class="header">
+                <h1>猪猪王国日报</h1>
+                <div class="date" id="dateStr"></div>
+                <div class="slogan">「每一天都是猪猪王国的好日子」</div>
+            </div>
+            <div class="edition" id="edition"></div>
+
+            <!-- Headline -->
+            <div class="section">
+                <div class="section-title"><span class="icon">📰</span> 今日头条</div>
+                <div class="headline" id="headline"></div>
+                <div class="headline-sub" id="headlineSub"></div>
+            </div>
+
+            <!-- Weather -->
+            <div class="section">
+                <div class="section-title"><span class="icon">🌤</span> 王国气象台</div>
+                <div class="weather-row" id="weather"></div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="section">
+                <div class="section-title"><span class="icon">📋</span> 今日皇家任务</div>
+                <div class="task-cards" id="tasks"></div>
+            </div>
+
+            <!-- Sweet words -->
+            <div class="section">
+                <div class="section-title"><span class="icon">💌</span> 每日猪猪夸夸</div>
+                <div class="sweet-box">
+                    <div class="from" id="sweetFrom"></div>
+                    <div class="words" id="sweetWords"></div>
+                </div>
+            </div>
+
+            <!-- Fortune -->
+            <div class="section">
+                <div class="section-title"><span class="icon">🔮</span> 今日猪运</div>
+                <div class="fortune-row" id="fortune"></div>
+            </div>
+
+            <div class="footer">
+                猪猪王国日报社 · 猪叽陛下与嗷猪将军联合监制<br>
+                未经王国授权 禁止偷看
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="generate()">🔄 换一期</button>
+    </div>
+
+    <script>
+        // Seeded random for daily consistency
+        function mulberry32(a) {
+            return function() {
+                a |= 0; a = a + 0x6D2B79F5 | 0;
+                var t = Math.imul(a ^ a >>> 15, 1 | a);
+                t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        function dateSeed() {
+            const d = new Date();
+            return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+        }
+
+        let rand;
+
+        function pick(arr) { return arr[Math.floor(rand() * arr.length)]; }
+        function pickN(arr, n) {
+            const copy = [...arr];
+            const result = [];
+            for (let i = 0; i < n && copy.length; i++) {
+                const idx = Math.floor(rand() * copy.length);
+                result.push(copy.splice(idx, 1)[0]);
+            }
+            return result;
+        }
+        function stars(n) { return '⭐'.repeat(n) + '☆'.repeat(5 - n); }
+
+        const headlines = [
+            { h: "猪叽陛下今日心情大好！", s: "嗷猪将军被要求多笑三次以示庆祝" },
+            { h: "嗷猪将军立下赫赫战功！", s: "成功消灭了冰箱里最后一块蛋糕" },
+            { h: "王国迎来史上最慵懒的一天", s: "两位猪猪均表示：今天只想躺平" },
+            { h: "猪叽陛下发布最新法令", s: "「本周拥抱次数不得少于20次」" },
+            { h: "嗷猪将军深夜偷吃被抓！", s: "猪叽陛下表示：下次记得叫上我" },
+            { h: "王国GDP再创新高！", s: "主要由两只猪猪的快乐指数贡献" },
+            { h: "猪猪王国外交部声明", s: "本国拒绝一切加班邀请，请勿打扰" },
+            { h: "重磅！猪叽陛下册封嗷猪将军", s: "新增头衔：「首席暖床大臣」" },
+            { h: "嗷猪将军发表重要讲话", s: "「猪叽陛下永远是对的，即使不对也是对的」" },
+            { h: "王国举办首届拥抱马拉松", s: "两位参赛选手均获得冠军" },
+            { h: "猪叽陛下新政策引发热议", s: "「每天必须说三次我爱你，否则罚亲亲」" },
+            { h: "紧急通知：王国零食库存告急", s: "嗷猪将军已被派往超市执行补给任务" },
+            { h: "破纪录！今日撒娇指数爆表", s: "气象台表示已超出仪器量程" },
+            { h: "王国年度最佳猪猪评选揭晓", s: "两位候选人互相投票，双双当选" },
+            { h: "嗷猪将军荣获「最佳饲养员」称号", s: "猪叽陛下对其投喂技术表示高度认可" },
+            { h: "猪猪王国科学院最新研究", s: "证实两只猪猪在一起时智商会同步下降" },
+        ];
+
+        const weatherMoods = [
+            { emoji: "😆", mood: "嗨到起飞" },
+            { emoji: "🥰", mood: "甜蜜爆棚" },
+            { emoji: "😊", mood: "心情晴朗" },
+            { emoji: "😋", mood: "想吃好吃的" },
+            { emoji: "🤗", mood: "想要抱抱" },
+            { emoji: "😴", mood: "困困模式" },
+            { emoji: "😎", mood: "超级自信" },
+            { emoji: "🥳", mood: "想要庆祝" },
+        ];
+
+        const weatherTypes = [
+            { emoji: "☀️", weather: "猪光普照" },
+            { emoji: "🌈", weather: "双猪彩虹" },
+            { emoji: "🌸", weather: "落猪缤纷" },
+            { emoji: "⭐", weather: "猪星闪耀" },
+            { emoji: "🍭", weather: "糖果阵雨" },
+            { emoji: "💖", weather: "爱心飘雪" },
+        ];
+
+        const luckyFoods = [
+            "火锅", "奶茶", "炸鸡", "蛋糕", "冰淇淋", "烧烤",
+            "麻辣烫", "披萨", "寿司", "螺蛳粉", "红烧肉", "草莓",
+        ];
+
+        const allTasks = [
+            "负责今日投喂（做饭/点外卖）",
+            "负责王国清洁（打扫卫生）",
+            "负责采购王国物资（买菜/日用品）",
+            "负责哄对方开心一次",
+            "负责说一句今天的表白",
+            "负责挑一部电影/综艺一起看",
+            "负责给对方倒一杯水",
+            "负责今日拍照记录王国生活",
+            "负责按摩服务（至少5分钟）",
+            "负责选今天听的歌",
+            "负责洗碗",
+            "负责出门遛弯路线规划",
+        ];
+
+        const sweetWordsFrom = [
+            { from: "猪叽陛下 对 嗷猪将军 说：", words: [
+                "谢谢你每天都在我身边，我的将军大人。",
+                "嗷猪将军是全世界最帅的猪！不接受反驳！",
+                "有你在的地方，就是猪猪王国的中心。",
+                "你今天也辛苦啦，本陛下允许你多吃一块肉。",
+                "认识你是我做过最正确的决定，比吃到好吃的还开心。",
+                "你笑起来的样子，比王国日落还好看。",
+                "今天也是喜欢嗷猪将军的一天呢。",
+                "本陛下宣布：你是限量版的宝藏猪猪。",
+            ]},
+            { from: "嗷猪将军 对 猪叽陛下 说：", words: [
+                "陛下今天也是全王国最可爱的猪！",
+                "为了陛下，末将愿意戒掉所有零食。（想想还是算了，一起吃吧）",
+                "能当陛下的将军，是我三生三世修来的猪福。",
+                "你开心的时候，整个王国都在发光。",
+                "不管未来怎样，末将永远守护猪猪王国。",
+                "今天的陛下，比昨天又可爱了一点点。",
+                "末将此生最大的战功，就是让陛下笑了。",
+                "请陛下放心，一切有末将在。",
+            ]},
+        ];
+
+        const fortuneTips = {
+            queen: [
+                "适合买买买", "宜撒娇", "适合躺平", "偷吃运极佳",
+                "灵感爆棚", "适合发号施令", "宜接受投喂", "好运连连",
+            ],
+            general: [
+                "适合表忠心", "宜主动干活", "偷吃必被抓", "适合送礼物",
+                "执行力MAX", "宜多说好话", "适合当暖猪", "战斗力爆表",
+            ],
+        };
+
+        function generate(forceRandom) {
+            rand = forceRandom ? mulberry32(Math.floor(Math.random() * 99999))
+                               : mulberry32(dateSeed());
+
+            // Date
+            const now = new Date();
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            document.getElementById('dateStr').textContent =
+                `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${weekdays[now.getDay()]}`;
+
+            const dayOfYear = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+            document.getElementById('edition').textContent =
+                `第 ${dayOfYear} 期 · 猪猪王国官方唯一指定刊物`;
+
+            // Headline
+            const hl = pick(headlines);
+            document.getElementById('headline').textContent = hl.h;
+            document.getElementById('headlineSub').textContent = hl.s;
+
+            // Weather
+            const queenMood = pick(weatherMoods);
+            const generalMood = pick(weatherMoods);
+            const wt = pick(weatherTypes);
+            const lucky = pick(luckyFoods);
+            document.getElementById('weather').innerHTML = `
+                <div class="weather-item">
+                    <div class="label">猪叽陛下</div>
+                    <div class="emoji">${queenMood.emoji}</div>
+                    <div class="value">${queenMood.mood}</div>
+                </div>
+                <div class="weather-item">
+                    <div class="label">王国天气</div>
+                    <div class="emoji">${wt.emoji}</div>
+                    <div class="value">${wt.weather}</div>
+                </div>
+                <div class="weather-item">
+                    <div class="label">嗷猪将军</div>
+                    <div class="emoji">${generalMood.emoji}</div>
+                    <div class="value">${generalMood.mood}</div>
+                </div>
+            `;
+
+            // Tasks
+            const taskList = pickN(allTasks, 4);
+            const people = ['猪叽陛下', '嗷猪将军', '猪叽陛下', '嗷猪将军'];
+            // shuffle people assignment
+            for (let i = people.length - 1; i > 0; i--) {
+                const j = Math.floor(rand() * (i + 1));
+                [people[i], people[j]] = [people[j], people[i]];
+            }
+            document.getElementById('tasks').innerHTML = taskList.map((t, i) => `
+                <div class="task-card">
+                    <span class="who ${people[i] === '猪叽陛下' ? 'queen' : 'general'}">${people[i]}</span>
+                    <span class="what">${t}</span>
+                </div>
+            `).join('');
+
+            // Sweet words
+            const sw = pick(sweetWordsFrom);
+            document.getElementById('sweetFrom').textContent = sw.from;
+            document.getElementById('sweetWords').textContent = pick(sw.words);
+
+            // Fortune
+            const queenStars = Math.floor(rand() * 3) + 3; // 3-5
+            const generalStars = Math.floor(rand() * 3) + 3;
+            document.getElementById('fortune').innerHTML = `
+                <div class="fortune-item">
+                    <div class="name">猪叽陛下</div>
+                    <div class="stars">${stars(queenStars)}</div>
+                    <div class="tip">${pick(fortuneTips.queen)}</div>
+                </div>
+                <div class="fortune-item">
+                    <div class="name">嗷猪将军</div>
+                    <div class="stars">${stars(generalStars)}</div>
+                    <div class="tip">${pick(fortuneTips.general)}</div>
+                </div>
+                <div class="fortune-item">
+                    <div class="name">今日幸运美食</div>
+                    <div class="stars" style="font-size:28px">🍽</div>
+                    <div class="tip">${lucky}</div>
+                </div>
+            `;
+        }
+
+        // First load: use date seed (same content all day)
+        generate(false);
+
+        // "换一期" button: random
+        document.querySelector('.refresh-btn').onclick = () => generate(true);
+    </script>
+</body>
+</html>
