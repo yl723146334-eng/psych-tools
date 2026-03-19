@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>麻将计分器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #1a472a 0%, #2d6a4f 50%, #1a472a 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 16px;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; }
+
+        .header { text-align: center; padding: 20px 0 16px; }
+        .header .icon { font-size: 40px; }
+        .header h1 { font-size: 22px; margin: 6px 0 2px; }
+        .header p { color: #a8d5ba; font-size: 13px; }
+
+        /* ===== Pages ===== */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ===== Select Page ===== */
+        .section-label { font-size: 14px; color: #a8d5ba; margin-bottom: 10px; }
+
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .player-select {
+            padding: 14px 8px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .player-select .avatar { font-size: 32px; margin-bottom: 4px; }
+        .player-select .pname { font-size: 14px; font-weight: 600; }
+        .player-select:active { transform: scale(0.95); }
+
+        .player-select.selected {
+            background: rgba(246, 211, 101, 0.2);
+            border-color: #f6d365;
+        }
+        .player-select.selected .pname { color: #f6d365; }
+
+        .select-hint {
+            text-align: center;
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 14px;
+        }
+
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn:active { transform: scale(0.97); }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #5a3e2b;
+        }
+
+        .btn-white {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-small { padding: 10px 16px; font-size: 14px; border-radius: 8px; width: auto; }
+
+        .btn-danger { background: rgba(220,53,69,0.7); color: #fff; }
+
+        /* ===== Game Page ===== */
+
+        /* Who am I */
+        .identity-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .identity-bar .me { color: #f6d365; font-weight: 600; }
+        .identity-bar .change { color: #a8d5ba; cursor: pointer; font-size: 13px; text-decoration: underline; }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-card {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .score-card.rank-1 {
+            background: rgba(246,211,101,0.12);
+            border-color: rgba(246,211,101,0.3);
+        }
+
+        .score-card .rank-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .score-card.rank-1 .rank-badge { background: #f6d365; color: #5a3e2b; }
+
+        .score-card .sc-avatar { font-size: 36px; }
+        .score-card .sc-name { font-size: 14px; font-weight: 600; margin: 4px 0; }
+        .score-card .sc-score { font-size: 30px; font-weight: 800; }
+
+        .score-positive { color: #a8e063; }
+        .score-negative { color: #ff6b6b; }
+
+        /* Give score section */
+        .give-section {
+            background: rgba(0,0,0,0.25);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .give-section h3 { font-size: 15px; color: #a8d5ba; margin-bottom: 14px; text-align: center; }
+
+        .give-targets {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .give-target {
+            width: 70px;
+            padding: 10px 4px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.06);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .give-target .gt-avatar { font-size: 28px; }
+        .give-target .gt-name { font-size: 12px; margin-top: 2px; }
+
+        .give-target:active { transform: scale(0.93); }
+
+        .give-target.selected {
+            background: rgba(246,211,101,0.2);
+            border-color: #f6d365;
+        }
+
+        /* Amount input */
+        .amount-area { text-align: center; }
+
+        .amount-display {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 8px 0;
+            color: #ff6b6b;
+        }
+
+        .amount-label { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+
+        .numpad {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            justify-content: center;
+        }
+
+        .numpad button {
+            padding: 14px 18px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .numpad button:active { background: rgba(255,255,255,0.2); }
+        .numpad button.selected { background: rgba(246,211,101,0.2); border-color: #f6d365; color: #f6d365; }
+
+        .custom-input-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .custom-input-row input {
+            width: 100px;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 16px;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .custom-input-row input:focus { outline: none; border-color: #f6d365; }
+
+        .custom-input-row button {
+            padding: 10px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: #a8d5ba;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .custom-input-row button:active { background: rgba(255,255,255,0.2); }
+
+        .give-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #5a3e2b;
+            opacity: 0.4;
+        }
+
+        .give-btn.ready { opacity: 1; }
+        .give-btn:active { transform: scale(0.97); }
+
+        /* History */
+        .history-section { margin-bottom: 16px; }
+        .history-section h3 { font-size: 14px; color: #a8d5ba; margin-bottom: 8px; }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item .detail { color: rgba(255,255,255,0.8); }
+        .history-item .time { color: rgba(255,255,255,0.35); flex-shrink: 0; margin-left: 8px; }
+
+        .empty-hint {
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            padding: 14px;
+            font-size: 14px;
+        }
+
+        .bottom-actions {
+            display: flex;
+            gap: 8px;
+            padding-bottom: 30px;
+        }
+        .bottom-actions .btn { flex: 1; }
+
+        /* Choose identity modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: #2d6a4f;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .modal h3 { margin-bottom: 16px; font-size: 18px; }
+
+        .modal .identity-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .modal .id-option {
+            padding: 16px 8px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal .id-option:active { transform: scale(0.95); }
+        .modal .id-option .avatar { font-size: 36px; }
+        .modal .id-option .pname { font-size: 15px; font-weight: 600; margin-top: 4px; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 380px) {
+            .score-card .sc-score { font-size: 26px; }
+            .give-target { width: 60px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="icon">🀄</div>
+        <h1>麻将计分器</h1>
+        <p>选人开局，各自记分</p>
+    </div>
+
+    <!-- ===== Select Page ===== -->
+    <div class="page active" id="selectPage">
+        <div class="section-label">选择今天参战的 4 位</div>
+        <div class="player-grid" id="playerGrid"></div>
+        <div class="select-hint" id="selectHint">已选 0/4 人</div>
+        <button class="btn btn-gold" id="startBtn" onclick="startGame()" style="opacity:0.5;" disabled>开始记分</button>
+
+        <div style="margin-top:20px;">
+            <div class="section-label">或加入已有牌局</div>
+            <div style="display:flex;gap:10px;">
+                <input type="text" id="joinInput" placeholder="粘贴分享链接或房间号"
+                       style="flex:1;padding:12px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;font-family:inherit;">
+                <button class="btn btn-small btn-white" onclick="joinManual()">加入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Game Page ===== -->
+    <div class="page" id="gamePage">
+        <div class="identity-bar">
+            <span>我是 <span class="me" id="myName">?</span></span>
+            <span class="change" onclick="chooseIdentity()">切换</span>
+        </div>
+
+        <div class="scoreboard" id="scoreboard"></div>
+
+        <div class="give-section">
+            <h3>给谁分？</h3>
+            <div class="give-targets" id="giveTargets"></div>
+
+            <div class="amount-area">
+                <div class="amount-label">输入分数</div>
+                <div class="amount-display" id="amountDisplay">0</div>
+                <div class="numpad" id="numpad">
+                    <button onclick="numInput(5, this)">5</button>
+                    <button onclick="numInput(10, this)">10</button>
+                    <button onclick="numInput(20, this)">20</button>
+                </div>
+                <div class="custom-input-row">
+                    <input type="number" id="customAmount" placeholder="其它分数" inputmode="numeric">
+                    <button onclick="numCustom()">确定</button>
+                </div>
+                <button class="give-btn" id="giveBtn" onclick="giveScore()">确认给分</button>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h3>记录</h3>
+            <div class="history-list" id="historyList">
+                <div class="empty-hint">暂无记录</div>
+            </div>
+        </div>
+
+        <div class="bottom-actions">
+            <button class="btn btn-small btn-white" onclick="shareGame()">分享给牌友</button>
+            <button class="btn btn-small btn-white" onclick="endGame()">结束本场</button>
+        </div>
+    </div>
+</div>
+
+<!-- Identity modal -->
+<div class="modal-overlay" id="identityModal">
+    <div class="modal">
+        <h3>你是谁？</h3>
+        <div class="identity-grid" id="identityGrid"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    const ALL_PLAYERS = [
+        { name: 'hyy',    avatar: '🐰' },
+        { name: 'tcc',    avatar: '🐯' },
+        { name: '杨柳',   avatar: '🐷' },
+        { name: '邱邱',   avatar: '🐱' },
+        { name: '小吉',   avatar: '🐶' },
+        { name: '周凯迪', avatar: '🦊' },
+    ];
+
+    let selectedPlayers = new Set();
+    let gameId = null;
+    let gamePlayers = []; // [{name, avatar, score}]
+    let myName = null;
+    let giveTarget = null;
+    let giveAmount = 0;
+    let sb = null;
+
+    // ===== Toast =====
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // ===== Player selection (start page) =====
+    function initPlayerGrid() {
+        document.getElementById('playerGrid').innerHTML = ALL_PLAYERS.map((p, i) => `
+            <div class="player-select" onclick="togglePlayer(${i})">
+                <div class="avatar">${p.avatar}</div>
+                <div class="pname">${p.name}</div>
+            </div>
+        `).join('');
+    }
+
+    function togglePlayer(index) {
+        if (selectedPlayers.has(index)) selectedPlayers.delete(index);
+        else if (selectedPlayers.size < 4) selectedPlayers.add(index);
+        updateSelection();
+    }
+
+    function updateSelection() {
+        document.querySelectorAll('.player-select').forEach((el, i) => {
+            el.classList.toggle('selected', selectedPlayers.has(i));
+        });
+        const n = selectedPlayers.size;
+        document.getElementById('selectHint').textContent = `已选 ${n}/4 人`;
+        const btn = document.getElementById('startBtn');
+        btn.disabled = n !== 4;
+        btn.style.opacity = n === 4 ? '1' : '0.5';
+    }
+
+    // ===== Start Game =====
+    async function startGame() {
+        if (selectedPlayers.size !== 4) return;
+        gameId = generateCode();
+        gamePlayers = Array.from(selectedPlayers).map(i => ({ ...ALL_PLAYERS[i], score: 0 }));
+
+        if (sb) {
+            try {
+                await sb.from('rooms').insert({ id: gameId, name: '麻将局' });
+                await sb.from('players').insert(gamePlayers.map(p => ({ room_id: gameId, name: p.name, total_score: 0 })));
+            } catch (e) { console.error(e); }
+        }
+
+        saveLocal();
+        chooseIdentity();
+        showPage('gamePage');
+        renderAll();
+        subscribeRealtime();
+    }
+
+    // ===== Choose Identity =====
+    function chooseIdentity() {
+        const grid = document.getElementById('identityGrid');
+        grid.innerHTML = gamePlayers.map(p => `
+            <div class="id-option" onclick="setIdentity('${p.name}')">
+                <div class="avatar">${p.avatar}</div>
+                <div class="pname">${p.name}</div>
+            </div>
+        `).join('');
+        document.getElementById('identityModal').classList.add('show');
+    }
+
+    function setIdentity(name) {
+        myName = name;
+        localStorage.setItem('mj_myname', name);
+        document.getElementById('myName').textContent = getAvatarByName(name) + ' ' + name;
+        document.getElementById('identityModal').classList.remove('show');
+        renderGiveTargets();
+    }
+
+    // ===== Render All =====
+    function renderAll() {
+        renderScoreboard();
+        renderGiveTargets();
+        renderHistory();
+    }
+
+    // ===== Scoreboard =====
+    function renderScoreboard() {
+        const sorted = [...gamePlayers].sort((a, b) => b.score - a.score);
+        document.getElementById('scoreboard').innerHTML = sorted.map((p, i) => {
+            const cls = p.score > 0 ? 'score-positive' : p.score < 0 ? 'score-negative' : '';
+            const sign = p.score > 0 ? '+' : '';
+            const isMe = p.name === myName ? ' (我)' : '';
+            return `
+                <div class="score-card ${i === 0 && p.score > 0 ? 'rank-1' : ''}">
+                    <div class="rank-badge">${i + 1}</div>
+                    <div class="sc-avatar">${p.avatar}</div>
+                    <div class="sc-name">${p.name}${isMe}</div>
+                    <div class="sc-score ${cls}">${sign}${p.score}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ===== Give Targets (other players) =====
+    function renderGiveTargets() {
+        const others = gamePlayers.filter(p => p.name !== myName);
+        giveTarget = null;
+        giveAmount = 0;
+        document.getElementById('amountDisplay').textContent = '0';
+        updateGiveBtn();
+
+        document.getElementById('giveTargets').innerHTML = others.map(p => `
+            <div class="give-target" id="gt_${p.name}" onclick="selectTarget('${p.name}')">
+                <div class="gt-avatar">${p.avatar}</div>
+                <div class="gt-name">${p.name}</div>
+            </div>
+        `).join('');
+    }
+
+    function selectTarget(name) {
+        giveTarget = name;
+        document.querySelectorAll('.give-target').forEach(el => el.classList.remove('selected'));
+        const el = document.getElementById('gt_' + name);
+        if (el) el.classList.add('selected');
+        updateGiveBtn();
+    }
+
+    // ===== Number input =====
+    function numInput(val, btnEl) {
+        giveAmount = val;
+        document.getElementById('amountDisplay').textContent = giveAmount;
+        document.getElementById('customAmount').value = '';
+        document.querySelectorAll('#numpad button').forEach(b => b.classList.remove('selected'));
+        if (btnEl) btnEl.classList.add('selected');
+        updateGiveBtn();
+    }
+
+    function numCustom() {
+        const val = parseInt(document.getElementById('customAmount').value);
+        if (!val || val <= 0) { alert('请输入正整数'); return; }
+        giveAmount = val;
+        document.getElementById('amountDisplay').textContent = giveAmount;
+        document.querySelectorAll('#numpad button').forEach(b => b.classList.remove('selected'));
+        updateGiveBtn();
+    }
+
+    function updateGiveBtn() {
+        const btn = document.getElementById('giveBtn');
+        const ready = giveTarget && giveAmount > 0;
+        btn.classList.toggle('ready', ready);
+
+        if (giveTarget && giveAmount > 0) {
+            const ta = getAvatarByName(giveTarget);
+            btn.textContent = `给 ${ta}${giveTarget} ${giveAmount} 分`;
+        } else {
+            btn.textContent = '确认给分';
+        }
+    }
+
+    // ===== Give Score =====
+    async function giveScore() {
+        if (!giveTarget || giveAmount <= 0 || !myName) return;
+
+        const giver = gamePlayers.find(p => p.name === myName);
+        const receiver = gamePlayers.find(p => p.name === giveTarget);
+        if (!giver || !receiver) return;
+
+        giver.score -= giveAmount;
+        receiver.score += giveAmount;
+
+        // Save log locally
+        const logEntry = {
+            from: myName,
+            to: giveTarget,
+            amount: giveAmount,
+            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+        };
+
+        let logs = JSON.parse(localStorage.getItem('mj_logs_' + gameId) || '[]');
+        logs.unshift(logEntry);
+        localStorage.setItem('mj_logs_' + gameId, JSON.stringify(logs));
+
+        // Sync to Supabase
+        if (sb && gameId) {
+            try {
+                const { data: dbPlayers } = await sb.from('players').select('id, name').eq('room_id', gameId);
+                if (dbPlayers) {
+                    const giverDb = dbPlayers.find(d => d.name === myName);
+                    const receiverDb = dbPlayers.find(d => d.name === giveTarget);
+                    const insertLogs = [];
+                    if (giverDb) {
+                        insertLogs.push({ room_id: gameId, player_id: giverDb.id, score: -giveAmount, note: `给${giveTarget}` });
+                        await sb.from('players').update({ total_score: giver.score }).eq('id', giverDb.id);
+                    }
+                    if (receiverDb) {
+                        insertLogs.push({ room_id: gameId, player_id: receiverDb.id, score: giveAmount, note: `来自${myName}` });
+                        await sb.from('players').update({ total_score: receiver.score }).eq('id', receiverDb.id);
+                    }
+                    if (insertLogs.length) await sb.from('score_logs').insert(insertLogs);
+                }
+            } catch (e) { console.error('Sync error:', e); }
+        }
+
+        showToast(`${getAvatarByName(myName)} → ${getAvatarByName(giveTarget)} ${giveAmount}分`);
+
+        saveLocal();
+        renderScoreboard();
+        renderGiveTargets();
+        renderHistory();
+    }
+
+    // ===== History =====
+    function renderHistory() {
+        const logs = JSON.parse(localStorage.getItem('mj_logs_' + gameId) || '[]');
+        const list = document.getElementById('historyList');
+        if (logs.length === 0) {
+            list.innerHTML = '<div class="empty-hint">暂无记录</div>';
+            return;
+        }
+        list.innerHTML = logs.map(l => {
+            const fa = getAvatarByName(l.from);
+            const ta = getAvatarByName(l.to);
+            return `<div class="history-item"><span class="detail">${fa}${l.from} → ${ta}${l.to} ${l.amount}分</span><span class="time">${l.time}</span></div>`;
+        }).join('');
+    }
+
+    // ===== Share =====
+    function shareGame() {
+        if (!gameId) return;
+        const url = window.location.href.split('?')[0] + '?g=' + gameId;
+        if (navigator.share) {
+            navigator.share({ title: '麻将计分器', text: '房间号: ' + gameId, url });
+        } else {
+            navigator.clipboard.writeText(url).then(() => showToast('链接已复制，发给牌友'));
+        }
+    }
+
+    // ===== End Game =====
+    function endGame() {
+        if (!confirm('确定结束本场？')) return;
+        localStorage.removeItem('mj_game');
+        localStorage.removeItem('mj_logs_' + gameId);
+        gameId = null;
+        gamePlayers = [];
+        myName = null;
+        selectedPlayers.clear();
+        updateSelection();
+        showPage('selectPage');
+    }
+
+    // ===== Join =====
+    function joinManual() {
+        let val = document.getElementById('joinInput').value.trim();
+        // Extract code from URL
+        const match = val.match(/[?&]g=([A-Z0-9]{6})/i);
+        if (match) val = match[1];
+        val = val.toUpperCase();
+        if (val.length === 6) {
+            joinGame(val);
+        } else {
+            alert('请输入6位房间号或粘贴分享链接');
+        }
+    }
+
+    async function joinGame(gid) {
+        if (!sb) { alert('网络连接中，请稍后再试'); return; }
+
+        try {
+            const { data: dbPlayers } = await sb.from('players').select('*').eq('room_id', gid).order('total_score', { ascending: false });
+            if (!dbPlayers || dbPlayers.length === 0) { alert('房间不存在'); return; }
+
+            gameId = gid;
+            gamePlayers = dbPlayers.map(p => ({
+                name: p.name,
+                avatar: getAvatarByName(p.name),
+                score: p.total_score
+            }));
+
+            // Load logs from DB
+            const { data: dbLogs } = await sb.from('score_logs')
+                .select('*, players(name)')
+                .eq('room_id', gid)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (dbLogs) {
+                const localLogs = [];
+                // Group into give pairs
+                for (let i = 0; i < dbLogs.length; i++) {
+                    const log = dbLogs[i];
+                    if (log.score > 0) {
+                        localLogs.push({
+                            from: log.note?.replace('来自', '') || '?',
+                            to: log.players?.name || '?',
+                            amount: log.score,
+                            time: new Date(log.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+                        });
+                    }
+                }
+                localStorage.setItem('mj_logs_' + gameId, JSON.stringify(localLogs));
+            }
+
+            saveLocal();
+
+            // Check saved identity
+            const savedName = localStorage.getItem('mj_myname');
+            if (savedName && gamePlayers.find(p => p.name === savedName)) {
+                myName = savedName;
+                document.getElementById('myName').textContent = getAvatarByName(myName) + ' ' + myName;
+            }
+
+            showPage('gamePage');
+            renderAll();
+            if (!myName) chooseIdentity();
+            subscribeRealtime();
+        } catch (e) {
+            console.error(e);
+            alert('加入失败，请重试');
+        }
+    }
+
+    // ===== Realtime =====
+    function subscribeRealtime() {
+        if (!sb || !gameId) return;
+        sb.channel('game_' + gameId)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: 'room_id=eq.' + gameId }, async () => {
+                try {
+                    const { data } = await sb.from('players').select('*').eq('room_id', gameId);
+                    if (data) {
+                        for (const dp of data) {
+                            const gp = gamePlayers.find(g => g.name === dp.name);
+                            if (gp) gp.score = dp.total_score;
+                        }
+                        saveLocal();
+                        renderScoreboard();
+                    }
+                } catch (e) {}
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'score_logs', filter: 'room_id=eq.' + gameId }, async () => {
+                // Reload history
+                try {
+                    const { data: dbLogs } = await sb.from('score_logs')
+                        .select('*, players(name)')
+                        .eq('room_id', gameId)
+                        .order('created_at', { ascending: false })
+                        .limit(50);
+
+                    if (dbLogs) {
+                        const localLogs = [];
+                        for (const log of dbLogs) {
+                            if (log.score > 0) {
+                                localLogs.push({
+                                    from: log.note?.replace('来自', '') || '?',
+                                    to: log.players?.name || '?',
+                                    amount: log.score,
+                                    time: new Date(log.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+                                });
+                            }
+                        }
+                        localStorage.setItem('mj_logs_' + gameId, JSON.stringify(localLogs));
+                        renderHistory();
+                    }
+                } catch (e) {}
+            })
+            .subscribe();
+    }
+
+    // ===== Utils =====
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function generateCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        return code;
+    }
+
+    function getAvatarByName(name) {
+        return ALL_PLAYERS.find(p => p.name === name)?.avatar || '🀄';
+    }
+
+    function saveLocal() {
+        localStorage.setItem('mj_game', JSON.stringify({ gameId, gamePlayers }));
+    }
+
+    // ===== Init =====
+    initPlayerGrid();
+
+    // Load Supabase async
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    script.onload = async () => {
+        try {
+            sb = supabase.createClient(
+                'https://caffxrmjcksvogkgsopk.supabase.co',
+                'sb_publishable_9eMpYZWpJ5-1Otc_BIl9Ew_H4c3orc0'
+            );
+        } catch (e) { console.error(e); }
+
+        // Auto join from URL
+        const params = new URLSearchParams(window.location.search);
+        const gid = params.get('g');
+        if (gid) {
+            await joinGame(gid);
+            return;
+        }
+
+        // Restore local game
+        try {
+            const saved = JSON.parse(localStorage.getItem('mj_game'));
+            if (saved?.gameId) {
+                gameId = saved.gameId;
+                gamePlayers = saved.gamePlayers;
+                const savedName = localStorage.getItem('mj_myname');
+                if (savedName && gamePlayers.find(p => p.name === savedName)) {
+                    myName = savedName;
+                    document.getElementById('myName').textContent = getAvatarByName(myName) + ' ' + myName;
+                }
+                showPage('gamePage');
+                renderAll();
+                if (!myName) chooseIdentity();
+                subscribeRealtime();
+            }
+        } catch (e) {}
+    };
+    script.onerror = () => {
+        console.warn('Offline mode');
+        try {
+            const saved = JSON.parse(localStorage.getItem('mj_game'));
+            if (saved?.gameId) {
+                gameId = saved.gameId;
+                gamePlayers = saved.gamePlayers;
+                myName = localStorage.getItem('mj_myname');
+                showPage('gamePage');
+                renderAll();
+                if (!myName) chooseIdentity();
+            }
+        } catch (e) {}
+    };
+    document.head.appendChild(script);
+</script>
+</body>
+</html>
