@@ -317,6 +317,27 @@
         }
         .bottom-actions .btn { flex: 1; }
 
+        /* Stats */
+        .stats-section { margin-top: 24px; padding-bottom: 30px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        .stat-card .stat-avatar { font-size: 24px; }
+        .stat-card .stat-name { font-size: 12px; color: #a8d5ba; margin: 2px 0; }
+        .stat-card .stat-value { font-size: 20px; font-weight: 700; }
+        .stat-card .stat-games { font-size: 11px; color: rgba(255,255,255,0.4); }
+
         /* Choose identity modal */
         .modal-overlay {
             display: none;
@@ -406,6 +427,13 @@
                 <input type="text" id="joinInput" placeholder="房间号" maxlength="4" inputmode="numeric"
                        style="flex:1;min-width:0;padding:12px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:22px;font-family:inherit;text-align:center;letter-spacing:4px;">
                 <button class="btn btn-small btn-white" onclick="joinManual()">加入</button>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="section-label">历史总战绩</div>
+            <div class="stats-grid" id="allTimeStats">
+                <div class="empty-hint" style="grid-column:1/-1;">暂无记录</div>
             </div>
         </div>
     </div>
@@ -750,6 +778,7 @@
         selectedPlayers.clear();
         updateSelection();
         showPage('selectPage');
+        loadAllTimeStats();
     }
 
     // ===== Join =====
@@ -883,6 +912,42 @@
         localStorage.setItem('mj_game', JSON.stringify({ gameId, gamePlayers }));
     }
 
+    // ===== All time stats =====
+    async function loadAllTimeStats() {
+        if (!sb) return;
+        const grid = document.getElementById('allTimeStats');
+
+        try {
+            const { data } = await sb.from('score_logs').select('score, players(name)');
+            if (!data || data.length === 0) return;
+
+            const totals = {};
+            const rounds = {};
+            for (const log of data) {
+                const name = log.players?.name;
+                if (!name) continue;
+                totals[name] = (totals[name] || 0) + log.score;
+                // Count rounds (each positive log = 1 win, each negative = 1 loss, just count all)
+                rounds[name] = (rounds[name] || 0) + 1;
+            }
+
+            const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+            grid.innerHTML = sorted.map(([name, score]) => {
+                const scoreClass = score > 0 ? 'score-positive' : score < 0 ? 'score-negative' : '';
+                const sign = score > 0 ? '+' : '';
+                return `
+                    <div class="stat-card">
+                        <div class="stat-avatar">${getAvatarByName(name)}</div>
+                        <div class="stat-name">${name}</div>
+                        <div class="stat-value ${scoreClass}">${sign}${score}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error('Stats error:', e);
+        }
+    }
+
     // ===== Init =====
     initPlayerGrid();
 
@@ -896,6 +961,8 @@
                 'sb_publishable_9eMpYZWpJ5-1Otc_BIl9Ew_H4c3orc0'
             );
         } catch (e) { console.error(e); }
+
+        loadAllTimeStats();
 
         // Auto join from URL
         const params = new URLSearchParams(window.location.search);
