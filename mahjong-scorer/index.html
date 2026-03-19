@@ -402,8 +402,8 @@
         <div style="margin-top:20px;">
             <div class="section-label">或加入已有牌局</div>
             <div style="display:flex;gap:10px;">
-                <input type="text" id="joinInput" placeholder="粘贴分享链接或房间号"
-                       style="flex:1;padding:12px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;font-family:inherit;">
+                <input type="text" id="joinInput" placeholder="4位房间号" maxlength="4" inputmode="numeric"
+                       style="flex:1;padding:12px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:24px;font-family:inherit;text-align:center;letter-spacing:8px;">
                 <button class="btn btn-small btn-white" onclick="joinManual()">加入</button>
             </div>
         </div>
@@ -413,7 +413,10 @@
     <div class="page" id="gamePage">
         <div class="identity-bar">
             <span>我是 <span class="me" id="myName">?</span></span>
-            <span class="change" onclick="chooseIdentity()">切换</span>
+            <span style="display:flex;align-items:center;gap:8px;">
+                <span style="color:rgba(255,255,255,0.4);font-size:12px;" id="roomIdShow"></span>
+                <span class="change" onclick="chooseIdentity()">切换身份</span>
+            </span>
         </div>
 
         <div class="scoreboard" id="scoreboard"></div>
@@ -457,6 +460,16 @@
     <div class="modal">
         <h3>你是谁？</h3>
         <div class="identity-grid" id="identityGrid"></div>
+    </div>
+</div>
+
+<!-- Room code modal -->
+<div class="modal-overlay" id="roomCodeModal">
+    <div class="modal">
+        <h3>房间已创建</h3>
+        <p style="color:#a8d5ba;font-size:14px;margin-bottom:12px;">把房间号告诉牌友</p>
+        <div id="roomCodeBig" style="font-size:48px;font-weight:800;letter-spacing:12px;color:#f6d365;margin:16px 0;"></div>
+        <button class="btn btn-gold" onclick="document.getElementById('roomCodeModal').classList.remove('show');" style="margin-top:8px;">好的，开始</button>
     </div>
 </div>
 
@@ -530,10 +543,17 @@
         }
 
         saveLocal();
-        chooseIdentity();
         showPage('gamePage');
         renderAll();
         subscribeRealtime();
+
+        // Show room code modal, then choose identity
+        document.getElementById('roomCodeBig').textContent = gameId;
+        document.getElementById('roomCodeModal').classList.add('show');
+        document.getElementById('roomCodeModal').querySelector('.btn').onclick = () => {
+            document.getElementById('roomCodeModal').classList.remove('show');
+            chooseIdentity();
+        };
     }
 
     // ===== Choose Identity =====
@@ -552,6 +572,7 @@
         myName = name;
         localStorage.setItem('mj_myname', name);
         document.getElementById('myName').textContent = getAvatarByName(name) + ' ' + name;
+        document.getElementById('roomIdShow').textContent = '房间 ' + (gameId || '');
         document.getElementById('identityModal').classList.remove('show');
         renderGiveTargets();
     }
@@ -731,14 +752,10 @@
     // ===== Join =====
     function joinManual() {
         let val = document.getElementById('joinInput').value.trim();
-        // Extract code from URL
-        const match = val.match(/[?&]g=([A-Z0-9]{6})/i);
-        if (match) val = match[1];
-        val = val.toUpperCase();
-        if (val.length === 6) {
+        if (val.length === 4 && /^\d{4}$/.test(val)) {
             joinGame(val);
         } else {
-            alert('请输入6位房间号或粘贴分享链接');
+            alert('请输入4位数字房间号');
         }
     }
 
@@ -852,10 +869,7 @@
     }
 
     function generateCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-        return code;
+        return String(Math.floor(1000 + Math.random() * 9000));
     }
 
     function getAvatarByName(name) {
