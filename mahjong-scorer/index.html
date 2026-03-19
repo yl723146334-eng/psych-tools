@@ -317,26 +317,70 @@
         }
         .bottom-actions .btn { flex: 1; }
 
-        /* Stats */
-        .stats-section { margin-top: 24px; padding-bottom: 30px; }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+        /* History page */
+        .history-page-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 30px;
         }
 
-        .stat-card {
+        .game-card {
             background: rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 12px 8px;
-            text-align: center;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            overflow: hidden;
         }
 
-        .stat-card .stat-avatar { font-size: 24px; }
-        .stat-card .stat-name { font-size: 12px; color: #a8d5ba; margin: 2px 0; }
-        .stat-card .stat-value { font-size: 20px; font-weight: 700; }
-        .stat-card .stat-games { font-size: 11px; color: rgba(255,255,255,0.4); }
+        .game-card-header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .game-card-header:active { background: rgba(255,255,255,0.05); }
+
+        .game-card-date { font-size: 14px; font-weight: 600; }
+        .game-card-preview { font-size: 13px; color: rgba(255,255,255,0.5); }
+        .game-card-arrow { color: rgba(255,255,255,0.3); font-size: 12px; transition: transform 0.2s; }
+        .game-card.open .game-card-arrow { transform: rotate(90deg); }
+
+        .game-card-detail {
+            display: none;
+            padding: 0 16px 14px;
+        }
+
+        .game-card.open .game-card-detail { display: block; }
+
+        .game-card-scores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .game-card-player {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255,255,255,0.06);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .game-card-player .gcp-score { font-weight: 700; margin-left: 2px; }
+
+        .game-card-logs {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .game-card-logs div { padding: 3px 0; }
 
         /* Choose identity modal */
         .modal-overlay {
@@ -430,11 +474,19 @@
             </div>
         </div>
 
-        <div class="stats-section">
-            <div class="section-label">历史总战绩</div>
-            <div class="stats-grid" id="allTimeStats">
-                <div class="empty-hint" style="grid-column:1/-1;">暂无记录</div>
-            </div>
+        <div style="margin-top:20px;">
+            <button class="btn btn-white" onclick="showHistoryPage()">📋 历史战局</button>
+        </div>
+    </div>
+
+    <!-- ===== History Page ===== -->
+    <div class="page" id="historyPage">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="section-label" style="margin:0;">历史战局</div>
+            <span style="color:#a8d5ba;font-size:13px;cursor:pointer;text-decoration:underline;" onclick="showPage('selectPage')">返回</span>
+        </div>
+        <div class="history-page-list" id="historyPageList">
+            <div class="empty-hint">暂无记录</div>
         </div>
     </div>
 
@@ -778,7 +830,6 @@
         selectedPlayers.clear();
         updateSelection();
         showPage('selectPage');
-        loadAllTimeStats();
     }
 
     // ===== Join =====
@@ -912,40 +963,106 @@
         localStorage.setItem('mj_game', JSON.stringify({ gameId, gamePlayers }));
     }
 
-    // ===== All time stats =====
-    async function loadAllTimeStats() {
-        if (!sb) return;
-        const grid = document.getElementById('allTimeStats');
+    // ===== History page =====
+    async function showHistoryPage() {
+        showPage('historyPage');
+        await loadHistoryPage();
+    }
+
+    async function loadHistoryPage() {
+        const list = document.getElementById('historyPageList');
+        if (!sb) {
+            list.innerHTML = '<div class="empty-hint">网络连接中…</div>';
+            return;
+        }
+
+        list.innerHTML = '<div class="empty-hint">加载中…</div>';
 
         try {
-            const { data } = await sb.from('score_logs').select('score, players(name)');
-            if (!data || data.length === 0) return;
+            // Get all rooms with their players
+            const { data: rooms } = await sb.from('rooms')
+                .select('id, name, created_at')
+                .order('created_at', { ascending: false });
 
-            const totals = {};
-            const rounds = {};
-            for (const log of data) {
-                const name = log.players?.name;
-                if (!name) continue;
-                totals[name] = (totals[name] || 0) + log.score;
-                // Count rounds (each positive log = 1 win, each negative = 1 loss, just count all)
-                rounds[name] = (rounds[name] || 0) + 1;
+            if (!rooms || rooms.length === 0) {
+                list.innerHTML = '<div class="empty-hint">暂无记录</div>';
+                return;
             }
 
-            const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-            grid.innerHTML = sorted.map(([name, score]) => {
-                const scoreClass = score > 0 ? 'score-positive' : score < 0 ? 'score-negative' : '';
-                const sign = score > 0 ? '+' : '';
-                return `
-                    <div class="stat-card">
-                        <div class="stat-avatar">${getAvatarByName(name)}</div>
-                        <div class="stat-name">${name}</div>
-                        <div class="stat-value ${scoreClass}">${sign}${score}</div>
+            // For each room, get final scores
+            const cards = [];
+            for (const room of rooms) {
+                const { data: players } = await sb.from('players')
+                    .select('name, total_score')
+                    .eq('room_id', room.id)
+                    .order('total_score', { ascending: false });
+
+                if (!players || players.length === 0) continue;
+
+                // Get detailed logs
+                const { data: logs } = await sb.from('score_logs')
+                    .select('score, note, created_at, players(name)')
+                    .eq('room_id', room.id)
+                    .order('created_at', { ascending: false })
+                    .limit(30);
+
+                const date = new Date(room.created_at);
+                const dateStr = `${date.getMonth()+1}月${date.getDate()}日 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
+
+                // Preview: top scorer
+                const top = players[0];
+                const topSign = top.total_score > 0 ? '+' : '';
+                const preview = `${getAvatarByName(top.name)}${topSign}${top.total_score}`;
+
+                // Player scores HTML
+                const scoresHtml = players.map(p => {
+                    const cls = p.total_score > 0 ? 'score-positive' : p.total_score < 0 ? 'score-negative' : '';
+                    const sign = p.total_score > 0 ? '+' : '';
+                    return `<div class="game-card-player">
+                        <span>${getAvatarByName(p.name)}</span>
+                        <span>${p.name}</span>
+                        <span class="gcp-score ${cls}">${sign}${p.total_score}</span>
+                    </div>`;
+                }).join('');
+
+                // Logs HTML
+                let logsHtml = '';
+                if (logs && logs.length) {
+                    const giveLogs = logs.filter(l => l.score > 0);
+                    logsHtml = giveLogs.map(l => {
+                        const from = l.note?.replace('来自', '') || '?';
+                        const to = l.players?.name || '?';
+                        const time = new Date(l.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                        return `<div>${getAvatarByName(from)}${from} → ${getAvatarByName(to)}${to} ${l.score}分 <span style="color:rgba(255,255,255,0.25)">${time}</span></div>`;
+                    }).join('');
+                }
+
+                cards.push(`
+                    <div class="game-card" id="gc_${room.id}">
+                        <div class="game-card-header" onclick="toggleGameCard('${room.id}')">
+                            <div>
+                                <div class="game-card-date">${dateStr}</div>
+                                <div class="game-card-preview">${preview} 等${players.length}人</div>
+                            </div>
+                            <span class="game-card-arrow">▶</span>
+                        </div>
+                        <div class="game-card-detail">
+                            <div class="game-card-scores">${scoresHtml}</div>
+                            ${logsHtml ? `<div class="game-card-logs">${logsHtml}</div>` : ''}
+                        </div>
                     </div>
-                `;
-            }).join('');
+                `);
+            }
+
+            list.innerHTML = cards.length ? cards.join('') : '<div class="empty-hint">暂无记录</div>';
         } catch (e) {
-            console.error('Stats error:', e);
+            console.error('History error:', e);
+            list.innerHTML = '<div class="empty-hint">加载失败</div>';
         }
+    }
+
+    function toggleGameCard(roomId) {
+        document.getElementById('gc_' + roomId).classList.toggle('open');
     }
 
     // ===== Init =====
@@ -961,8 +1078,6 @@
                 'sb_publishable_9eMpYZWpJ5-1Otc_BIl9Ew_H4c3orc0'
             );
         } catch (e) { console.error(e); }
-
-        loadAllTimeStats();
 
         // Auto join from URL
         const params = new URLSearchParams(window.location.search);
