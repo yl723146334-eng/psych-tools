@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未来的我，写给现在的你</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a3f6b;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8a82a6;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #4a3f6b;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e8e5f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            background: #faf9fc;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #764ba2;
+            background: #fff;
+        }
+
+        textarea { resize: vertical; min-height: 80px; }
+
+        .tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            border: 2px solid #e8e5f0;
+            border-radius: 20px;
+            background: #faf9fc;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .tag:hover { border-color: #b8aed0; }
+
+        .tag.selected {
+            background: #764ba2;
+            color: #fff;
+            border-color: #764ba2;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 12px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(118, 75, 162, 0.35);
+        }
+
+        .btn:active { transform: translateY(0); }
+
+        /* Letter result */
+        .letter-wrapper {
+            display: none;
+        }
+
+        .letter-wrapper.show {
+            display: block;
+        }
+
+        .letter {
+            background: #fffdf5;
+            border: 1px solid #e8dcc8;
+            border-radius: 12px;
+            padding: 32px;
+            line-height: 1.9;
+            color: #5a4a3a;
+            font-size: 15px;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .letter::before {
+            content: "\2709";
+            position: absolute;
+            top: -15px;
+            left: 24px;
+            font-size: 28px;
+            background: #fffdf5;
+            padding: 0 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #764ba2;
+            background: #fff;
+            color: #764ba2;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #764ba2;
+            color: #fff;
+        }
+
+        .btn-primary-small {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 24px; }
+            h1 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Input Form -->
+        <div id="formSection">
+            <h1>未来的我，写给现在的你</h1>
+            <p class="subtitle">想象未来的自己，会对现在的你说些什么？</p>
+
+            <div class="form-group">
+                <label>你的称呼</label>
+                <input type="text" id="name" placeholder="怎么称呼你？">
+            </div>
+
+            <div class="form-group">
+                <label>你想收到几年后的来信？</label>
+                <div class="tag-group" id="yearTags">
+                    <span class="tag" data-value="1">1 年后</span>
+                    <span class="tag" data-value="3">3 年后</span>
+                    <span class="tag selected" data-value="5">5 年后</span>
+                    <span class="tag" data-value="10">10 年后</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>现在最困扰你的事情是什么？</label>
+                <textarea id="worry" placeholder="可以是学业、人际关系、未来方向……"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>你希望未来的自己是什么样的？</label>
+                <textarea id="hope" placeholder="描述你理想中未来的生活或状态……"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>你觉得自己身上最棒的品质是？</label>
+                <div class="tag-group" id="qualityTags">
+                    <span class="tag" data-value="善良">善良</span>
+                    <span class="tag" data-value="坚韧">坚韧</span>
+                    <span class="tag" data-value="乐观">乐观</span>
+                    <span class="tag" data-value="好奇心强">好奇心强</span>
+                    <span class="tag" data-value="有同理心">有同理心</span>
+                    <span class="tag" data-value="努力">努力</span>
+                    <span class="tag" data-value="有创造力">有创造力</span>
+                    <span class="tag" data-value="温暖">温暖</span>
+                </div>
+            </div>
+
+            <button class="btn" onclick="generateLetter()">生成来信</button>
+        </div>
+
+        <!-- Letter Result -->
+        <div class="letter-wrapper" id="letterSection">
+            <h1>一封来自未来的信</h1>
+            <p class="subtitle" id="letterMeta"></p>
+            <div class="letter" id="letterContent"></div>
+            <div class="btn-group">
+                <button class="btn-secondary" onclick="goBack()">重新填写</button>
+                <button class="btn-primary-small" onclick="copyLetter()">复制信件</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tag selection logic
+        document.querySelectorAll('#yearTags .tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                document.querySelectorAll('#yearTags .tag').forEach(t => t.classList.remove('selected'));
+                tag.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('#qualityTags .tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                tag.classList.toggle('selected');
+            });
+        });
+
+        function getSelectedYear() {
+            const el = document.querySelector('#yearTags .tag.selected');
+            return el ? el.dataset.value : '5';
+        }
+
+        function getSelectedQualities() {
+            return Array.from(document.querySelectorAll('#qualityTags .tag.selected'))
+                .map(el => el.dataset.value);
+        }
+
+        // Letter templates
+        const openings = [
+            "嘿，{name}，好久不见！当你读到这封信的时候，我已经是{year}年后的你了。",
+            "亲爱的{name}，我是{year}年后的你。坐下来，让我跟你说说心里话。",
+            "Hi {name}！我是来自{year}年后的你，今天特别想给你写这封信。",
+            "{name}，你好呀。我是未来的你，从{year}年后穿越时光来和你聊聊。"
+        ];
+
+        const worryResponses = [
+            "我知道你现在正在为「{worry}」发愁。说实话，我站在未来回头看，那段日子确实不容易。但我想告诉你，你比自己以为的要坚强得多。那些让你夜不能寐的事情，最终都会找到出路——不一定是你现在能想象到的方式，但一定会的。",
+            "你现在烦恼的「{worry}」，我都记得。那时候的焦虑是真实的，我不会说「别担心」这种话。但我想让你知道，正是因为你认真对待了这些困难，未来的路才走得更踏实。每一次纠结，都在让你变得更清醒。",
+            "关于「{worry}」——我理解你现在的感受。这些困扰会教会你一些现在还看不到的东西。回头看，它们不是绊脚石，而是让你成长的必经之路。请允许自己慢慢来，不用急着找到答案。"
+        ];
+
+        const hopeResponses = [
+            "你说你希望「{hope}」——告诉你一个秘密：你正走在通往那里的路上。也许现在看不到全貌，但你现在做的每一个小小的努力，都在为那个未来添砖加瓦。",
+            "关于你期待的「{hope}」——未来的样子可能和你现在想象的不完全一样，但会以另一种美好的方式呈现。保持你心中的那个画面，它是你前进的灯塔。",
+            "你梦想着「{hope}」。我想说，梦想会生长、会变化，但那颗追求美好的心不会变。你现在种下的种子，终会在某个春天开花。"
+        ];
+
+        const qualityParts = {
+            "善良": "你的善良不是软弱，它是你最强大的力量。这个世界会回报每一份真诚的善意。",
+            "坚韧": "你的坚韧会带你穿越所有风雨。那些没有打倒你的，都让你变得更强。",
+            "乐观": "你骨子里的乐观是多么珍贵的礼物。即使在最灰暗的日子里，你也能找到光。",
+            "好奇心强": "永远不要丢掉你的好奇心。它会带你去到意想不到的地方，遇见意想不到的风景。",
+            "有同理心": "你感受他人的能力是稀有的天赋。它让你成为朋友们最信赖的人。",
+            "努力": "你的努力从来不会白费。也许不是立刻看到回报，但每一份付出都在积累。",
+            "有创造力": "你的创造力是独属于你的超能力。大胆去尝试，去表达，不要害怕与众不同。",
+            "温暖": "你的温暖像阳光一样照亮身边的人。这种能力，比你以为的更重要。"
+        };
+
+        const closings = [
+            "最后，我想说：请对现在的自己温柔一点。你不需要完美，你只需要真实。未来的我，因为有你此刻的坚持，才能成为现在的样子。\n\n谢谢你，{name}。\n\n——{year}年后的你",
+            "记住，你值得被爱，值得快乐，值得拥有你想要的一切。不是因为你做了什么，而是因为你就是你。\n\n带着爱，\n{year}年后的{name}",
+            "别忘了，在赶路的时候也要停下来看看风景。生活不只是到达终点，沿途的每一步都算数。\n\n永远支持你的，\n未来的你\n{year}年后"
+        ];
+
+        function pickRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function fillTemplate(template, data) {
+            return template.replace(/\{(\w+)\}/g, (_, key) => data[key] || '');
+        }
+
+        function generateLetter() {
+            const name = document.getElementById('name').value.trim() || '朋友';
+            const worry = document.getElementById('worry').value.trim();
+            const hope = document.getElementById('hope').value.trim();
+            const year = getSelectedYear();
+            const qualities = getSelectedQualities();
+
+            if (!worry && !hope) {
+                alert('请至少填写一项困扰或期望哦~');
+                return;
+            }
+
+            const data = { name, worry, hope, year };
+
+            let parts = [];
+            parts.push(fillTemplate(pickRandom(openings), data));
+
+            if (worry) {
+                parts.push(fillTemplate(pickRandom(worryResponses), data));
+            }
+
+            if (hope) {
+                parts.push(fillTemplate(pickRandom(hopeResponses), data));
+            }
+
+            if (qualities.length > 0) {
+                let qText = "对了，我特别想提醒你——";
+                qText += qualities.map(q => qualityParts[q] || '').filter(Boolean).join('');
+                parts.push(qText);
+            }
+
+            parts.push(fillTemplate(pickRandom(closings), data));
+
+            const letter = parts.join('\n\n');
+
+            document.getElementById('letterContent').textContent = letter;
+            document.getElementById('letterMeta').textContent = `写给 ${name}，来自 ${year} 年后的自己`;
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('letterSection').classList.add('show');
+        }
+
+        function goBack() {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('letterSection').classList.remove('show');
+        }
+
+        function copyLetter() {
+            const text = document.getElementById('letterContent').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.btn-primary-small');
+                btn.textContent = '已复制！';
+                setTimeout(() => { btn.textContent = '复制信件'; }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
