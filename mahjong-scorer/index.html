@@ -13,6 +13,7 @@
             min-height: 100vh;
             color: #fff;
             padding: 16px;
+            overflow-x: hidden;
         }
 
         .container { max-width: 500px; margin: 0 auto; }
@@ -402,8 +403,8 @@
         <div style="margin-top:20px;">
             <div class="section-label">或加入已有牌局</div>
             <div style="display:flex;gap:10px;">
-                <input type="text" id="joinInput" placeholder="4位房间号" maxlength="4" inputmode="numeric"
-                       style="flex:1;padding:12px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:24px;font-family:inherit;text-align:center;letter-spacing:8px;">
+                <input type="text" id="joinInput" placeholder="房间号" maxlength="4" inputmode="numeric"
+                       style="flex:1;min-width:0;padding:12px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:22px;font-family:inherit;text-align:center;letter-spacing:4px;">
                 <button class="btn btn-small btn-white" onclick="joinManual()">加入</button>
             </div>
         </div>
@@ -728,12 +729,14 @@
     // ===== Share =====
     function shareGame() {
         if (!gameId) return;
-        const url = window.location.href.split('?')[0] + '?g=' + gameId;
-        if (navigator.share) {
-            navigator.share({ title: '麻将计分器', text: '房间号: ' + gameId, url });
-        } else {
-            navigator.clipboard.writeText(url).then(() => showToast('链接已复制，发给牌友'));
-        }
+        document.getElementById('roomCodeBig').textContent = gameId;
+        document.getElementById('roomCodeModal').querySelector('h3').textContent = '房间号';
+        document.getElementById('roomCodeModal').querySelector('p').textContent = '告诉牌友输入这个房间号加入';
+        document.getElementById('roomCodeModal').querySelector('.btn').textContent = '好的';
+        document.getElementById('roomCodeModal').querySelector('.btn').onclick = () => {
+            document.getElementById('roomCodeModal').classList.remove('show');
+        };
+        document.getElementById('roomCodeModal').classList.add('show');
     }
 
     // ===== End Game =====
